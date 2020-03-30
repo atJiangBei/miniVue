@@ -50,6 +50,9 @@ export function parsePath(path) {
 export function noop(a, b, c) {}
 
 
+
+
+
 export const inBrowser = typeof window !== 'undefined'
 export const inWeex = typeof WXEnvironment !== 'undefined' && !!WXEnvironment.platform
 export const weexPlatform = inWeex && WXEnvironment.platform.toLowerCase()

@@ -1,7 +1,8 @@
 import Dep from './dep.js'
 import {
 	def,
-	isObject
+	isObject,
+	hasOwn,
 } from '../utils'
 import {
 	arrayMethods
@@ -22,6 +23,7 @@ export class Observer {
 		this.value = value
 		this.dep = new Dep()
 		this.vmCount = 0
+		def(value, '__ob__', this)
 		if(Array.isArray(value)) {
 			protoAugment(value, arrayMethods)
 			this.observeArray(value)
@@ -35,15 +37,15 @@ export class Observer {
 			defineReactive(obj, keys[i])
 		}
 	}
-	observerArray(items) {
+	observeArray(items) {
 		for (let i = 0, l = items.length; i < l; i++) {
-			observer(items[i])
+			observe(items[i])
 		}
 	}
 }
 
 function protoAugment(target, src) {
-	targer.__proto__ = src
+	target.__proto__ = src
 }
 
 export function observe (value, asRootData) {
@@ -117,4 +119,15 @@ export function defineReactive(
 			dep.notify()
 		}
 	})
+}
+
+
+function dependArray (value) {
+  for (let e, i = 0, l = value.length; i < l; i++) {
+    e = value[i]
+    e && e.__ob__ && e.__ob__.dep.depend()
+    if (Array.isArray(e)) {
+      dependArray(e)
+    }
+  }
 }
