@@ -20,7 +20,13 @@ const vm = new Vue({
 			console.log(ovl,nvl)
 		}
 	},
+	computed:{
+		animal(){
+			return this.name + '金毛'
+		}
+	},
 	render(h) {
+		console.log(29,this.animal)
 		const map = this.arr;
 		let list = map.map(item=>{
 			return h("li",{},item)
@@ -29,16 +35,12 @@ const vm = new Vue({
 			style: {
 				lineHeight: "32px"
 			}
-		}, h("h1",{style:{color:"#000"}},this.name),h("ul", {style:{color:"#f00"}}, ...list))
+		}, h("h1",{style:{color:"#000"}},this.animal),h("ul", {style:{color:"#f00"}}, ...list))
 	}
 }).mount()
 
 
 setTimeout(() => {
 	vm.arr.push("哈士奇")
-	vm.name = "哈士奇1"
-	vm.name = "哈士奇2"
-	vm.name = "哈士奇3"
-	vm.name = "哈士奇4"
 	vm.name = "哈士奇"
 }, 1000)

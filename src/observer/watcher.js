@@ -52,28 +52,21 @@ export default class Watcher {
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()
       : ''
-    // parse expression for getter
     if (typeof expOrFn === 'function') {
+		//当该watcher是渲染watcher和计算属性 watcher时
       this.getter = expOrFn
     } else {
       this.getter = parsePath(expOrFn)
-      if (!this.getter) {
-        this.getter = noop
-        process.env.NODE_ENV !== 'production' && console.error(
-          `Failed watching path: "${expOrFn}" ` +
-          'Watcher only accepts simple dot-delimited paths. ' +
-          'For full control, use a function instead.',
-          vm
-        )
-      }
     }
+	//当lazy为真时，代表为computed计算属性
+	//如果非计算属性，直接执行get，收集依赖
     this.value = this.lazy
       ? undefined
       : this.get()
   }
 
   /**
-   * Evaluate the getter, and re-collect dependencies.
+   * 计算getter，然后重新收集依赖项。
    */
   get () {
     pushTarget(this)
@@ -88,14 +81,7 @@ export default class Watcher {
         throw e
       }
     } finally {
-		//“触摸”每一个属性，这样它们都被跟踪为
-		//深度监视的依赖项
-      // "touch" every property so they are all tracked as
-      // dependencies for deep watching
-      if (this.deep) {
-        //traverse(value)
-      }
-      //popTarget()
+      popTarget()
       this.cleanupDeps()
     }
     return value

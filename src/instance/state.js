@@ -92,71 +92,55 @@ function createWatcher (
 
 const computedWatcherOptions = { lazy: true }
 
-// function initComputed (vm, computed) {
-//   // $flow-disable-line
-//   const watchers = vm._computedWatchers = Object.create(null)
+function initComputed (vm, computed) {
+  // $flow-disable-line
+  const watchers = vm._computedWatchers = Object.create(null)
 
-//   for (const key in computed) {
-//     const userDef = computed[key]
-//     const getter = typeof userDef === 'function' ? userDef : userDef.get
-//     watchers[key] = new Watcher(
-//       vm,
-//       getter || noop,
-//       noop,
-//       computedWatcherOptions
-//     )
+  for (const key in computed) {
+    const userDef = computed[key]
+    const getter = userDef
+    watchers[key] = new Watcher(
+      vm,
+      getter,
+      noop,
+      computedWatcherOptions
+    )
+    if (!(key in vm)) {
+      defineComputed(vm, key, userDef)
+    }
+  }
+}
 
-//     // component-defined computed properties are already defined on the
-//     // component prototype. We only need to define computed properties defined
-//     // at instantiation here.
-//     if (!(key in vm)) {
-//       defineComputed(vm, key, userDef)
-//     }
-//   }
-// }
+export function defineComputed (
+  target,
+  key,
+  userDef
+) {
+  if (typeof userDef === 'function') {
+    sharedPropertyDefinition.get = createComputedGetter(key)
+    sharedPropertyDefinition.set = noop
+  }
+  Object.defineProperty(target, key, sharedPropertyDefinition)
+}
 
-// export function defineComputed (
-//   target,
-//   key,
-//   userDef
-// ) {
-//   const shouldCache = !isServerRendering()
-//   if (typeof userDef === 'function') {
-//     sharedPropertyDefinition.get = shouldCache
-//       ? createComputedGetter(key)
-//       : createGetterInvoker(userDef)
-//     sharedPropertyDefinition.set = noop
-//   } else {
-//     sharedPropertyDefinition.get = userDef.get
-//       ? shouldCache && userDef.cache !== false
-//         ? createComputedGetter(key)
-//         : createGetterInvoker(userDef.get)
-//       : noop
-//     sharedPropertyDefinition.set = userDef.set || noop
-//   }
-//   if (process.env.NODE_ENV !== 'production' &&
-//       sharedPropertyDefinition.set === noop) {
-//     sharedPropertyDefinition.set = function () {
-//       warn(
-//         `Computed property "${key}" was assigned to but it has no setter.`,
-//         this
-//       )
-//     }
-//   }
-//   Object.defineProperty(target, key, sharedPropertyDefinition)
-// }
+function createComputedGetter (key) {
+  return function computedGetter () {
+    const watcher = this._computedWatchers && this._computedWatchers[key]
+    if (watcher) {
+      if (watcher.dirty) {
+        watcher.evaluate()
+      }
+      if (Dep.target) {
+        watcher.depend()
+      }
+      return watcher.value
+    }
+  }
+}
 
-// function createComputedGetter (key) {
-//   return function computedGetter () {
-//     const watcher = this._computedWatchers && this._computedWatchers[key]
-//     if (watcher) {
-//       if (watcher.dirty) {
-//         watcher.evaluate()
-//       }
-//       if (Dep.target) {
-//         watcher.depend()
-//       }
-//       return watcher.value
-//     }
-//   }
-// }
+
+function createGetterInvoker(fn) {
+  return function computedGetter () {
+    return fn.call(this, this)
+  }
+}
